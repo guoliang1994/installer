@@ -5,6 +5,7 @@ import (
 	"github.com/kardianos/service"
 	"github.com/spf13/cobra"
 	"os/exec"
+	"runtime"
 )
 
 type program struct {
@@ -71,10 +72,11 @@ func (this *installer) Install() {
 			Option:      options,
 			UserName:    "root",
 		}
-		svcConfig.Dependencies = []string{
-			"Requires=network.target",
-			"After=network-online.target syslog.target"}
-		if service.Platform() == "unix-systemv" {
+
+		if runtime.GOOS != "windows" {
+			svcConfig.Dependencies = []string{
+				"Requires=network.target",
+				"After=network-online.target syslog.target"}
 			svcConfig.UserName = "root"
 		}
 		var err error
