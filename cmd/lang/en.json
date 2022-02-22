@@ -1,0 +1,58 @@
+{
+  "success": "success",
+  "fail": "fail",
+  "appName": "installer",
+  "needRoot": "need use root to execute the program",
+  "autoStart": "start and start automatically",
+  "install": {
+    "name": "install",
+    "short": "install {{1}}",
+    "success": "{{program}} install success!",
+    "fail": "{{program}} install fail!"
+  },
+  "uninstall": {
+    "name": "install",
+    "success": "{{program}} uninstall success!",
+    "fail": "{{program}} uninstall fail! {{reason}}",
+    "short": "uninstall {{1}}",
+    "long": "uninstall will be remove the {{1}} from your computer!"
+  },
+  "start": {
+    "name": "start",
+    "short": "start {{1}}",
+    "success": "{{1}} start success.",
+    "fail": "{{1}} start fail，{{2}}."
+  },
+  "foreground": {
+    "name": "foreground",
+    "short": "foreground start {{1}}",
+    "success": "{{1}} front start success。",
+    "fail": "{{1}} front start fail，{{2}}。"
+  },
+  "stop": {
+    "name": "stop",
+    "short": "stop {{1}}.",
+    "success": "{{1}} stop success.",
+    "fail": "{{1}} stop fail, {{2}}."
+  },
+  "restart": {
+    "name": "restart",
+    "short": "restart {{1}}",
+    "long": "restart {{1}}，send the single，than restart",
+    "success": "{{1}} restart success.",
+    "fail": "{{1}} restart fail，{{2}}."
+  },
+  "version": {
+    "name": "version",
+    "short": "show {{1}} version"
+  },
+  "lang": {
+    "name": "language",
+    "short": "set the language used by the {{1}}."
+  },
+  "status": {
+    "name": "status",
+    "short": "show {{1}} status."
+  },
+  "installMultiProgram": "You have installed multiple programs but have not set the root command. Please use SetRootCmd() to set the root command, otherwise only the last program will be installed"
+}

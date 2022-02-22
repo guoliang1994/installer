@@ -1,0 +1,55 @@
+{
+  "needRoot": "需要使用root用户运行程序",
+  "install": {
+    "name": "安装",
+    "success": "{{program}}安装成功。",
+    "fail": "{{program}} 安装失败，{{reason}}。",
+    "short": "安装{{1}}",
+    "long": "安装{{1}},开机自动启动。"
+  },
+  "uninstall": {
+    "name": "卸载",
+    "success": "{{program}}卸载成功。",
+    "fail": "{{program}}卸载失败，{{reason}}",
+    "short": "卸载{{1}}",
+    "long": "卸载程序将会从你的计算机中移除{{1}}"
+  },
+  "start": {
+    "name": "启动",
+    "short": "后台启动{{1}}",
+    "success": "{{1}}后台运行成功。",
+    "fail": "{{1}}后台运行失败，{{2}}。"
+  },
+  "foreground": {
+    "name": "前台启动",
+    "short": "前台启动{{1}}",
+    "success": "{{1}}前台运行成功。",
+    "fail": "{{1}}前台运行失败，{{2}}。"
+  },
+  "stop": {
+    "name": "停止",
+    "short": "停止运行{{1}}。",
+    "success": "{{1}}停止成功。",
+    "fail": "{{1}}停止失败{{2}}。"
+  },
+  "restart": {
+    "name": "重启",
+    "short": "重启{{1}}",
+    "long": "停止{{1}}，发送停止信号，然后重启。",
+    "success": "{{1}}重启成功。",
+    "fail": "{{1}}重启失败，{{2}}。"
+  },
+  "version": {
+    "name": "版本",
+    "short": "查看{{1}}的版本号"
+  },
+  "lang": {
+    "name": "语言",
+    "short": "设置{{1}}使用的语言。"
+  },
+  "status": {
+    "name": "状态",
+    "short": "查看{{1}}的运行状态。"
+  },
+  "installMultiProgram": "您安装了多个程序，但是没有设置根命令，请使用 SetRootCmd() 设置根命令，否则只会安装最后一个程序!"
+}

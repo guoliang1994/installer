@@ -1,9 +1,15 @@
 package cmd
 
 import (
+	"embed"
+	"errors"
 	"fmt"
 	"github.com/kardianos/service"
 	"github.com/spf13/cobra"
+	"gopkg.in/guoliang1994/go-i18n.v2"
+	"gopkg.in/guoliang1994/go-i18n.v2/driver"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"runtime"
 )
@@ -16,6 +22,7 @@ type program struct {
 	program     service.Interface
 	service     service.Service
 	RootCmd     *cobra.Command
+	lang        *i18n.I18N
 }
 
 type installer struct {
@@ -26,6 +33,7 @@ type installer struct {
 }
 
 func NewInstaller() *installer {
+
 	return &installer{}
 }
 
@@ -70,7 +78,6 @@ func (this *installer) Install() {
 			DisplayName: p.appName,
 			Description: p.description,
 			Option:      options,
-			UserName:    "root",
 		}
 
 		if runtime.GOOS != "windows" {
@@ -88,7 +95,7 @@ func (this *installer) Install() {
 				this.rootCmd.AddCommand(p.RootCmd)
 			} else {
 				this.rootCmd = p.RootCmd
-				fmt.Println("您安装了多个程序，但是没有设置根命令，请使用 SetRootCmd 设置根命令，否则只会安装最后一个程序")
+				fmt.Println(p.lang.T("installMultiProgram"), p.binName)
 			}
 		} else {
 			// 如果只有一个程序，那根程序就等于子程序
@@ -103,13 +110,29 @@ func (this *installer) Install() {
 	this.execute()
 }
 
+//go:embed lang
+var langFs embed.FS
+
 func NewProgram(binName, appName, description, version string, p service.Interface) *program {
+	// Use Chinese as the default language
+	// Modify the language using the Lang command
+	embedDriver := driver.NewEmbedI18NImpl(langFs, "lang/")
+	_, err := os.Stat("lang.conf")
+	var l *i18n.I18N
+	if err != nil {
+		l = i18n.NewI18N(i18n.Chinese)
+	} else {
+		lang, _ := ioutil.ReadFile("lang.conf")
+		l = i18n.NewI18N(string(lang))
+	}
+	l.AddLang(embedDriver)
 	app := &program{
 		binName:     binName,
 		appName:     appName,
 		description: description,
 		version:     version,
 		program:     p,
+		lang:        l,
 	}
 	// 程序的名称就是根命令
 	app.RootCmd = &cobra.Command{
@@ -126,12 +149,17 @@ func (i *program) install() {
 	c := "install"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "安装 " + i.appName,
-		Long:  "安装 " + i.appName + ",开机自启",
+		Short: i.lang.T("install.short", i.appName),
+		Long:  i.lang.T("install.long", i.appName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			_ = i.service.Stop()
 			_ = i.service.Uninstall()
-			return i.service.Install()
+			err := i.service.Install()
+			if err != nil {
+				return errors.New(i.lang.T("install.fail", i.appName, err.Error()))
+			}
+			fmt.Println(i.lang.T("install.success", i.appName))
+			return nil
 		},
 	}
 	i.RootCmd.AddCommand(installCmd)
@@ -141,32 +169,31 @@ func (i *program) uninstall() {
 	c := "uninstall"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "卸载 " + i.appName,
-		Long:  "卸载 " + i.appName,
+		Short: i.lang.T("uninstall.short", i.appName),
+		Long:  i.lang.T("uninstall.short", i.appName),
 		RunE:  i.control(c),
 	}
 	i.RootCmd.AddCommand(installCmd)
 }
 
-func (i *program) run() error {
+func (i *program) run() {
 	c := "run"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "前台运行 " + i.appName,
-		Long:  "前台运行 " + i.appName,
+		Short: i.lang.T("foreground.short", i.appName),
+		Long:  i.lang.T("foreground.short", i.appName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return i.service.Run()
 		},
 	}
 	i.RootCmd.AddCommand(installCmd)
-	return nil
 }
 func (i *program) start() {
 	c := "start"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "后台启动 " + i.appName,
-		Long:  "后台启动 " + i.appName,
+		Short: i.lang.T("start.short", i.appName),
+		Long:  i.lang.T("start.short", i.appName),
 		RunE:  i.control(c),
 	}
 	i.RootCmd.AddCommand(installCmd)
@@ -176,8 +203,8 @@ func (i *program) stop() {
 	c := "stop"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "停止 " + i.appName,
-		Long:  "停止 " + i.appName,
+		Short: i.lang.T("stop.short", i.appName),
+		Long:  i.lang.T("stop.short", i.appName),
 		RunE:  i.control(c),
 	}
 	i.RootCmd.AddCommand(installCmd)
@@ -186,8 +213,8 @@ func (i *program) restart() {
 	c := "restart"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "重启 " + i.appName,
-		Long:  "重启 " + i.appName,
+		Short: i.lang.T("restart.short", i.appName),
+		Long:  i.lang.T("restart.long", i.appName),
 		RunE:  i.control(c),
 	}
 	i.RootCmd.AddCommand(installCmd)
@@ -196,8 +223,8 @@ func (i *program) status() {
 	c := "status"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "查看 " + i.appName + " 状态",
-		Long:  "查看 " + i.appName + " 状态",
+		Short: i.lang.T("status.short", i.appName),
+		Long:  i.lang.T("status.short", i.appName),
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("")
 		},
@@ -208,8 +235,8 @@ func (i *program) ver() {
 	c := "version"
 	var installCmd = &cobra.Command{
 		Use:   c,
-		Short: "查看 " + i.appName + " 版本",
-		Long:  "查看 " + i.appName + " 版本",
+		Short: i.lang.T("version.short", i.appName),
+		Long:  i.lang.T("version.short", i.appName),
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(i.version)
 		},
@@ -218,15 +245,21 @@ func (i *program) ver() {
 }
 func (i *program) Lang() {
 	c := "lang"
-	var installCmd = &cobra.Command{
+	var langCmd = &cobra.Command{
 		Use:   c,
-		Short: "设置 " + i.appName + " 语言",
-		Long:  "设置 " + i.appName + " 语言",
+		Short: i.lang.T("lang.short", i.appName),
+		Long:  i.lang.T("lang.short", i.appName),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(i.version)
+			lang := cmd.Flag("language").Value.String()
+			err := ioutil.WriteFile("lang.conf", []byte(lang), 0777)
+			if err != nil {
+				return
+			}
 		},
 	}
-	i.RootCmd.AddCommand(installCmd)
+	var lang string
+	langCmd.Flags().StringVarP(&lang, "language", "l", "zh", i.lang.T("lang.short"))
+	i.RootCmd.AddCommand(langCmd)
 }
 
 // start stop restart
@@ -236,6 +269,10 @@ func (i *program) control(command string) func(cmd *cobra.Command, args []string
 			terminal := exec.Command("/etc/init.d/"+i.appName, command)
 			return terminal.Run()
 		}
-		return service.Control(i.service, command)
+		err := service.Control(i.service, command)
+		if err != nil {
+			return errors.New(i.lang.T(command+".fail", i.appName, err.Error()))
+		}
+		return nil
 	}
 }
